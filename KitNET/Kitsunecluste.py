@@ -1,11 +1,9 @@
 import numpy as np
-import Kitsunecluster.corClust as CC
+import Kitsunecluster
 
 # Kitsunecluster is a lightweight online anomaly detection algorithm based on an ensemble of autoencoders.
 
 class Kitsunecluster:
-    #n: the number of features in your input dataset (i.e., x \in R^n)
-    #m: the maximum size of any autoencoder in the ensemble layer
     #NLB: Network learning before anomoly scores
     #TLM: Times taken to learn mapping
     #LRC: Learning of cluster
@@ -26,15 +24,15 @@ class Kitsunecluster:
         self.hr = hr
         self.n = n
 
-        self.n_trained = 0 # the number of training instances so far
-        self.n_executed = 0 # the number of executed instances so far
+        self.n_trained = 0 
+        self.n_executed = 0 
         self.v = feature_map
         if self.v is None:
             print("Feature-Mapper: train-mode, Anomaly-Detector: off-mode")
         else:
             self.__createNLB__()
             print("Feature-Mapper: execute-mode, Anomaly-Detector: train-mode")
-        self.TLM = CC.corClust(self.n) #incremental feature cluatering for the feature mapping process
+        self.TLM = CC.corClust(self.n) 
         self.ensembleLayer = []
         self.outputLayer = None
 
@@ -45,8 +43,6 @@ class Kitsunecluster:
             self.train(x)
             return 0.0
 
-    #force train KitNET on x
-    #returns the anomaly score of x during training (do not use for alerting)
     def train(self,x):
         if self.n_trained <= self.TLM and self.v is None: 
             self.TLM.update(x)
@@ -82,11 +78,9 @@ class Kitsunecluster:
             return self.outputLayer.execute(S_l1)
 
     def __createNLB__(self):
-        # construct ensemble layer
         for map in self.v:
             params = AE.dA_params(n_visible=len(map), n_hidden=0, lr=self.lr, corruption_level=0, gracePeriod=0, hr=self.hr)
             self.ensembleLayer.append(AE.dA(params))
 
-        # construct output layer
         params = AE.dA_params(len(self.v), n_hidden=0, lr=self.lr, corruption_level=0, gracePeriod=0, hr=self.hr)
         self.outputLayer = AE.dA(params)
